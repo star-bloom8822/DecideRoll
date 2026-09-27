@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DecideRoll</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #475569;
+            --accent: #2e5b88;        
+            --accent-hover: #24486d; 
+            --border-color: #cbd5e1;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-color);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .container:hover {
+            box-shadow: 0 14px 30px -6px rgba(0, 0, 0, 0.12);
+        }
+
+        h1 {
+            margin: 25px 0 6px 0;
+            font-size: 1.8rem;
+            color: var(--text-main);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 22px;
+            line-height: 1.4;
+        }
+
+        .presets-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .preset-btn {
+            background: #e2e8f0;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-btn:hover {
+            transform: translateY(-2px);
+            background: #cbd5e1;
+            border-color: #94a3b8;
+        }
+
+        .preset-btn:active {
+            transform: translateY(0);
+        }
+
+        .preset-btn.active {
+            background: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+            transform: translateY(0);
+        }
+
+        .box {
+            background: #f1f5f9;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            text-align: left;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .box:hover {
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        textarea {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            box-sizing: border-box;
+            resize: vertical;
+            min-height: 110px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04) inset;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(46, 91, 136, 0.15), 0 1px 2px rgba(0,0,0,0.04) inset;
+        }
+
+        .textarea-tools {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .tool-btn {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tool-btn:hover {
+            background: #e2e8f0;
+            color: var(--text-main);
+            border-color: #94a3b8;
+            transform: translateY(-1px);
+        }
+
+        .ruled-out-container {
+            background: #faf4f4;        
+            border: 1px solid #f2d8d8;  
+            color: #a32d2d;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-top: 12px;
+        }
+
+        .ruled-out-header {
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #fecaca;
+            padding-bottom: 6px;
+        }
+
+        .ruled-out-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-link-btn {
+            background: none;
+            border: none;
+            color: #a32d2d;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0;
+        }
+
+        .action-link-btn:hover {
+            color: #792222;
+        }
+
+        .ruled-out-list {
+            list-style-type: disc;
+            margin: 0;
+            padding-left: 20px;
+            max-height: 110px;
+            overflow-y: auto;
+        }
+
+        .ruled-out-list li {
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-right: 4px;
+        }
+
+        .ruled-out-list button {
+            background: #a32d2d;
+            color: #fff;
+            border: none;
+            padding: 2px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .ruled-out-list button:hover {
+            background: #792222;
+        }
+
+        .options-toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .checkbox-label input {
+            accent-color: var(--accent);
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .spin-btn {
+            background: var(--accent);
+            color: #ffffff;
+            border: none;
+            padding: 14px 24px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(46, 91, 136, 0.25);
+        }
+
+        .spin-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(46, 91, 136, 0.35);
+        }
+
+        .spin-btn:active {
+            transform: translateY(0);
+        }
+
+        .spin-btn:disabled {
+            background: #64748b;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .result-card {
+            background: #f0f4f8;
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            animation: popIn 0.3s ease-in-out, softPulse 2s infinite ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes softPulse {
+            0% { box-shadow: 0 0 0 0 rgba(46, 91, 136, 0.1); }
+            50% { box-shadow: 0 0 0 8px rgba(46, 91, 136, 0.05); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 91, 136, 0.1); }
+        }
+
+        .result-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--accent);
+            margin-bottom: 4px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .result-winner {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0 0 16px 0;
+            word-break: break-word;
+            position: relative;
+            z-index: 2;
+        }
+
+        .spinning-effect {
+            filter: blur(2px);
+            opacity: 0.6;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .secondary-btn {
+            background: #ffffff;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .secondary-btn:hover {
+            background: #e2e8f0;
+            border-color: #94a3b8;
+            transform: translateY(-1px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            
+            /* Swipeable horizontal single line for category buttons with extra space below */
+            .presets-row {
+                display: flex;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                justify-content: flex-start;
+                gap: 8px;
+                margin-bottom: 22px; /* Added breathing room below */
+                padding-bottom: 4px;
+            }
+            .presets-row::-webkit-scrollbar {
+                display: none; /* Hides scrollbar cleanly */
+            }
+            .preset-btn {
+                flex-shrink: 0; /* Prevents buttons from squishing or shrinking */
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+
+            /* Clean 2x2 grid for bottom result buttons */
+            .btn-group { 
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px; 
+            }
+            .secondary-btn { 
+                width: 100%; 
+                padding: 10px 10px; 
+                font-size: 13px;    
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>DecideRoll</h1>
+    <div class="subtitle">Settle indecision instantly. Type your options and spin to decide.</div>
+
+    <!-- PRESETS -->
+    <div class="presets-row">
+        <button class="preset-btn active" onclick="loadPreset('dinner', event)"><span aria-hidden="true">🍕</span> Dinner Options</button>
+        <button class="preset-btn" onclick="loadPreset('activity', event)">⭐ Hobbies & Activities</button>
+        <button class="preset-btn" onclick="loadPreset('movie', event)">🎬 Movie Genres</button>
+        <button class="preset-btn" onclick="loadPreset('custom', event)">✏️ Custom List</button>
+    </div>
+
+    <!-- INPUT BOX -->
+    <div class="box">
+        <div class="label-row">
+            <label for="optionsInput">Your Options (one per line):</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" id="readListBtn" class="secondary-btn" style="padding: 4px 10px; font-size: 0.75rem; min-width: auto; flex: none;" onclick="toggleReadList()">🔊 Read List</button>
+            </div>
+        </div>
+        <textarea id="optionsInput" placeholder="Enter your choices here..." oninput="recordHistory()"></textarea>
+        
+        <!-- Action Toolbar -->
+        <div class="textarea-tools">
+            <button type="button" class="tool-btn" onclick="undoText()">↩️ Undo</button>
+            <button type="button" class="tool-btn" onclick="shuffleLines()">🔀 Shuffle Order</button>
+            <button type="button" class="tool-btn" onclick="clearLastLine()">🗑️ Delete</button>
+        </div>
+
+        <!-- Ruled-Out Options List Banner -->
+        <div id="ruledOutContainer" class="ruled-out-container hidden">
+            <div class="ruled-out-header">
+                <span>🚫 Ruled Out For This Session:</span>
+                <div class="ruled-out-actions">
+                    <button class="action-link-btn" onclick="restoreAllRules()">🔄 Restore All</button>
+                    <button class="action-link-btn" onclick="clearAllRules()">Clear List</button>
+                </div>
+            </div>
+            <ul id="ruledOutList" class="ruled-out-list"></ul>
+        </div>
+    </div>
+
+    <div class="options-toggle-row">
+        <label class="checkbox-label">
+            <input type="checkbox" id="highStakesToggle"> ⚡ High-Stakes Mode (Binding!)
+        </label>
+        <span id="optionCount">6 options loaded</span>
+    </div>
+
+    <button id="spinBtn" class="spin-btn" onclick="spinWheel()">🎲 Spin!</button>
+
+    <!-- RESULT -->
+    <div id="resultCard" class="result-card hidden">
+        <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+        
+        <div class="result-title" id="resultHeader">The Verdict Is In:</div>
+        <div id="winnerOutput" class="result-winner"></div>
+        <div class="btn-group">
+            <button class="secondary-btn" onclick="copyResult(this)">📋 Copy</button>
+            <button class="secondary-btn" onclick="ruleOutWinner()">🚫 Rule Out</button>
+            <button class="secondary-btn" onclick="speakResult()">🔊 Read Aloud</button>
+            <button class="secondary-btn" onclick="spinWheel()">🔄 Spin Again</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const memoryStore = {};
+    const safeStorage = {
+        getItem: function(key) {
+            try { return localStorage.getItem(key); } 
+            catch (e) { return memoryStore[key] || null; }
+        },
+        setItem: function(key, value) {
+            try { localStorage.setItem(key, value); } 
+            catch (e) { memoryStore[key] = value; }
+        }
+    };
+
+    const presets = {
+        dinner: "Pizza Delivery\nTacos & Mexican\nBurgers & Fries\nHomemade Pasta\nChinese Takeout\nHealthy Salad Bowl",
+        activity: "Board Game Night\nGo for a Walk\nVideo Games\nWatch a Movie\nVisit a Coffee Shop\nCook Together",
+        movie: "Sci-Fi Thriller\nComedy\nAction Blockbuster\nHorror\nDocumentary\nHeartwarming Drama"
+    };
+
+    const textarea = document.getElementById('optionsInput');
+    const optionCountEl = document.getElementById('optionCount');
+
+    let historyStack = [];
+    let isInternalChange = false;
+    let ruledOutItems = [];
+
+    function recordHistory() {
+        if (isInternalChange) return;
+        const currentVal = textarea.value;
+        if (historyStack[historyStack.length - 1] !== currentVal) {
+            historyStack.push(currentVal);
+            if (historyStack.length > 20) historyStack.shift();
+        }
+        updateCountAndSave();
+    }
+
+    function undoText() {
+        if (historyStack.length > 1) {
+            historyStack.pop();
+            const previousVal = historyStack[historyStack.length - 1];
+            isInternalChange = true;
+            textarea.value = previousVal;
+            isInternalChange = false;
+            updateCountAndSave();
+        }
+    }
+
+    function shuffleLines() {
+        const lines = textarea.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        if (lines.length <= 1) return;
+        
+        for (let i = lines.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [lines[i], lines[j]] = [lines[j], lines[i]];
+        }
+        
+        isInternalChange = true;
+        textarea.value = lines.join('\n');
+        isInternalChange = false;
+        recordHistory();
+    }
+
+    function clearLastLine() {
+        const lines = textarea.value.split('\n');
+        if (lines.length > 0) {
+            lines.pop();
+            isInternalChange = true;
+            textarea.value = lines.join('\n');
+            isInternalChange = false;
+            recordHistory();
+        }
+    }
+
+    function ruleOutWinner() {
+        const winner = document.getElementById('winnerOutput').innerText;
+        if (!winner) return;
+        
+        if (!ruledOutItems.includes(winner)) {
+            ruledOutItems.push(winner);
+        }
+        updateRuledOutUI();
+        document.getElementById('resultCard').classList.add('hidden');
+    }
+
+    function removeRuledOutItem(item) {
+        ruledOutItems = ruledOutItems.filter(i => i !== item);
+        updateRuledOutUI();
+    }
+
+    function restoreAllRules() {
+        ruledOutItems = [];
+        updateRuledOutUI();
+    }
+
+    function clearAllRules() {
+        ruledOutItems = [];
+        updateRuledOutUI();
+    }
+
+    function updateRuledOutUI() {
+        const container = document.getElementById('ruledOutContainer');
+        const listEl = document.getElementById('ruledOutList');
+        
+        if (ruledOutItems.length === 0) {
+            container.classList.add('hidden');
+        } else {
+            container.classList.remove('hidden');
+            listEl.innerHTML = '';
+            ruledOutItems.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${item}</span> <button onclick="removeRuledOutItem('${item.replace(/'/g, "\\'")}')">Restore</button>`;
+                listEl.appendChild(li);
+            });
+        }
+        updateCountAndSave();
+    }
+
+    function updateCountAndSave() {
+        let options = textarea.value.trim().split('\n').map(item => item.trim()).filter(item => item.length > 0);
+        options = options.filter(item => !ruledOutItems.includes(item));
+        
+        optionCountEl.innerText = `${options.length} option${options.length === 1 ? '' : 's'} loaded`;
+        safeStorage.setItem('universal_decider_custom', textarea.value);
+    }
+
+    textarea.addEventListener('input', updateCountAndSave);
+
+    function loadPreset(category, event) {
+        document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        if (category === 'custom') {
+            const saved = safeStorage.getItem('universal_decider_custom');
+            textarea.value = saved ? saved : "Option 1\nOption 2\nOption 3";
+        } else {
+            textarea.value = presets[category];
+        }
+        historyStack = [textarea.value];
+        ruledOutItems = [];
+        updateRuledOutUI();
+        document.getElementById('resultCard').classList.add('hidden');
+    }
+
+    textarea.value = presets.dinner;
+    historyStack = [textarea.value];
+    updateCountAndSave();
+
+    function spinWheel() {
+        let textValue = textarea.value.trim();
+        let options = textValue.split('\n').map(item => item.trim()).filter(item => item.length > 0);
+
+        options = options.filter(item => !ruledOutItems.includes(item));
+
+        if (options.length === 0) {
+            alert("All available options have been ruled out! Please restore some options or add new ones.");
+            return;
+        }
+
+        const spinBtn = document.getElementById('spinBtn');
+        const resultCard = document.getElementById('resultCard');
+        const winnerOutput = document.getElementById('winnerOutput');
+
+        spinBtn.disabled = true;
+        resultCard.classList.remove('hidden');
+        winnerOutput.classList.add('spinning-effect');
+
+        let counter = 0;
+        const maxCycles = 12;
+        const intervalTime = 90;
+
+        const slotInterval = setInterval(() => {
+            const randomTempChoice = options[Math.floor(Math.random() * options.length)];
+            winnerOutput.innerText = randomTempChoice;
+            counter++;
+
+            if (counter >= maxCycles) {
+                clearInterval(slotInterval);
+                const finalWinner = options[Math.floor(Math.random() * options.length)];
+                winnerOutput.innerText = finalWinner;
+                winnerOutput.classList.remove('spinning-effect');
+                spinBtn.disabled = false;
+                
+                triggerInternalConfetti();
+            }   
+            
+        }, intervalTime);
+    }
+
+    function copyResult(buttonElement) {
+        const winner = document.getElementById('winnerOutput').innerText;
+        const shareText = `🎲 DecideRoll's final choice is: "${winner}"!`;
+
+        navigator.clipboard.writeText(shareText).then(() => {
+            const originalText = buttonElement.innerHTML;
+            buttonElement.innerHTML = "✅ Copied!";
+            setTimeout(() => {
+                buttonElement.innerHTML = originalText;
+            }, 2000);
+        });
+    }
+
+    function speakResult() {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const winner = document.getElementById('winnerOutput').innerText;
+            const prefix = "The winner is:";
+            const utterance = new SpeechSynthesisUtterance(`${prefix} ${winner}`);
+            window.speechSynthesis.speak(utterance);
+        } else {
+            alert("Text-to-speech is not supported on your browser.");
+        }
+    }
+
+    function toggleReadList() {
+        if (!('speechSynthesis' in window)) {
+            alert("Text-to-speech is not supported on your browser.");
+            return;
+        }
+
+        const readBtn = document.getElementById('readListBtn');
+
+        if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+            window.speechSynthesis.pause();
+            readBtn.innerText = "▶️ Resume List";
+            return;
+        }
+
+        if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+            readBtn.innerText = "⏸️ Pause List";
+            return;
+        }
+
+        window.speechSynthesis.cancel(); 
+        let options = textarea.value.trim().split('\n').map(item => item.trim()).filter(item => item.length > 0);
+        options = options.filter(item => !ruledOutItems.includes(item));
+
+        if (options.length === 0) {
+            alert("There are no available options loaded to read.");
+            return;
+        }
+
+        const speechText = `Your current options are: ${options.join(', ')}`;
+        const utterance = new SpeechSynthesisUtterance(speechText);
+        
+        readBtn.innerText = "⏸️ Pause List";
+
+        utterance.onend = function() {
+            readBtn.innerText = "🔊 Read List";
+        };
+
+        utterance.onerror = function() {
+            readBtn.innerText = "🔊 Read List";
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    const canvas = document.getElementById('confettiCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeInternalCanvas() {
+        const resultCard = document.getElementById('resultCard');
+        canvas.width = resultCard.clientWidth;
+        canvas.height = resultCard.clientHeight;
+    }
+
+    function triggerInternalConfetti() {
+        resizeInternalCanvas();
+        particles = [];
+        const colors = ['#2e5b88', '#38bdf8', '#fbbf24', '#34d399', '#f43f5e', '#a855f7'];
+        const particleCount = 30;
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                vx: (Math.random() - 0.5) * 5,
+                vy: (Math.random() - 0.7) * 4 - 1,
+                size: Math.random() * 5 + 3,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                rotation: Math.random() * 360,
+                rotationSpeed: (Math.random() - 0.5) * 6,
+                gravity: 0.15,
+                opacity: 1
+            });
+        }
+        requestAnimationFrame(updateInternalConfetti);
+    }
+
+    function updateInternalConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        particles.forEach((p, index) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += p.gravity;
+            p.rotation += p.rotationSpeed;
+            p.opacity -= 0.02;
+
+            if (p.opacity <= 0) {
+                particles.splice(index, 1);
+                return;
+            }
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate((p.rotation * Math.PI) / 180);
+            ctx.globalAlpha = Math.max(0, p.opacity);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+            ctx.restore();
+        });
+
+        if (particles.length > 0) {
+            requestAnimationFrame(updateInternalConfetti);
+        }
+    }
+</script>
+
+</body>
+</html>
